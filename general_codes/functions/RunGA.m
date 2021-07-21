@@ -51,7 +51,7 @@ function out = RunGA(problem ,params)
             p2 = pop(q(2));
             
             [popc(k, 1).Position, popc(k, 2).Position] = ...
-                SinglePointCrossover(p1.Position, p2.Position);
+                MyCrossover(p1.Position, p2.Position);
         end
         
         % Convert popc to Single-Column Matrix
