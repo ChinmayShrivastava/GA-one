@@ -10,6 +10,7 @@ function out = RunGA(problem ,params)
     pC = params.pC;
     nC = round(pC*nPop/2)*2;
     mu = params.mu;
+    beta = params.beta;
     
     % Template for Empty Individuals
     empty_individual.Position = [];
@@ -39,16 +40,24 @@ function out = RunGA(problem ,params)
     
     % Main Loop
     for it = 1:MaxIt
-        
+
+        % Selection Probabilities
+        c = [pop.Cost];
+        avgc = mean(c);
+        if avgc ~= 0
+            c = c/avgc;
+        end
+        probs = exp(-beta*c);
+
         % Initialize Offsprings Population
         popc = repmat(empty_individual, nC/2, 2);
         
+        % Crossover
         for k = 1:nC/2
             
             % Select Parents
-            q = randperm(nPop);
-            p1 = pop(q(1));
-            p2 = pop(q(2));
+            p1 = pop(RouletteWheelSelection(probs));
+            p2 = pop(RouletteWheelSelection(probs));
             
             [popc(k, 1).Position, popc(k, 2).Position] = ...
                 MyCrossover(p1.Position, p2.Position);
