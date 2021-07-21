@@ -7,6 +7,9 @@ function out = RunGA(problem ,params)
     % Params
     MaxIt = params.MaxIt;
     nPop = params.nPop;
+    pC = params.pC;
+    nC = round(pC*nPop/2)*2;
+    mu = params.mu;
     
     % Template for Empty Individuals
     empty_individual.Position = [];
@@ -18,9 +21,14 @@ function out = RunGA(problem ,params)
     % Initialization
     pop = repmat(empty_individual, nPop, 1);
     for i = 1:nPop
+        
+        % Generate Random Solution
         pop(i).Position = randi([0, 1], 1, nVar);
+        
+        % Evaluate Solution
         pop(i).Cost = CostFunction(pop(i).Position);
         
+        % Compare Soultion to Best Solution Ever Found
         if pop(i).Cost < bestsol.Cost
             bestsol = pop(i);
         end
@@ -31,6 +39,54 @@ function out = RunGA(problem ,params)
     
     % Main Loop
     for it = 1:MaxIt
+        
+        % Initialize Offsprings Population
+        popc = repmat(empty_individual, nC/2, 2);
+        
+        for k = 1:nC/2
+            
+            % Select Parents
+            q = randperm(nPop);
+            p1 = pop(q(1));
+            p2 = pop(q(2));
+            
+            [popc(k, 1).Position, popc(k, 2).Position] = ...
+                SinglePointCrossover(p1.Position, p2.Position);
+        end
+        
+        % Convert popc to Single-Column Matrix
+        popc = popc(:);
+        
+        % Mutation
+        for l = 1:numel(popc)
+            
+            % Perform Mutation
+            popc(l).Position = Mutate(popc(l).Position, mu);
+            
+            % Evaluate
+            popc(l).Cost = CostFunction(popc(l).Position);
+            
+            % Compare Solution to Best Solution Ever Found
+            if popc(l).Cost < bestsol.Cost
+                bestsol = popc(l);
+            end
+            
+        end
+        
+        % Merge Populations
+        pop = [pop; popc];
+        
+        % Sort Population
+        pop = SortPopulation(pop);
+        
+        % Remove Extra Individuals
+        pop = pop(1:nPop);
+        
+        % Update Best Cost of Iteration
+        bestcost(it) = bestsol.Cost;
+        
+        % Display Iteration Information
+        disp(['Interation ' num2str(it) ': Best Cost = ' num2str(bestcost(it))]);
         
     end
     
